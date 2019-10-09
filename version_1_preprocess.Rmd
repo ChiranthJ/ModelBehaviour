@@ -1,0 +1,104 @@
+---
+title: "Project_version1"
+author: "Namrata R"
+date: "09/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#install.packages("tidyverse")
+#library(tidyverse)
+library(grid)
+library(gridExtra)
+library(dplyr)
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+train = read.csv('C:\\Users\\rames\\OneDrive\\Desktop\\namma\\DA_proj\\costa-rican-household-poverty-prediction (1)\\train.csv')
+test = read.csv('C:\\Users\\rames\\OneDrive\\Desktop\\namma\\DA_proj\\costa-rican-household-poverty-prediction (1)\\test.csv')
+
+#head(train)
+```
+
+```{r}
+#summary(test)
+#summary(train)
+colnames(train)
+#finding empty values
+table(is.na(train))
+
+#finding no of empty values for each column
+#sapply(train, function(x) sum(is.na(x)))
+
+na_count <- sort(colSums(is.na(train)),decreasing = TRUE)
+na_count <- data.frame(names=names(na_count), count=na_count)
+print(na_count)
+```
+```{r}
+#subsetting dataset to get only columns with members being head of household as they determine the target variable
+target<-subset(train, parentesco1==1)
+#dim(target)
+
+# getting count of the level of poverty(target variabvle) to see distribution
+cat("total number of rows with each classified target\n")
+table(target$Target)
+barplot(table(target$Target))
+
+#checking consistency of data, if all members of a given household belong to same target
+#split(train, with(train, interaction(idhogar)), drop = TRUE)
+
+#to handle this inconsistency, all other members will have same target value as the head
+
+new_train<-train %>%
+	group_by(idhogar)%>%
+  arrange(desc(parentesco1),.by_group = TRUE)%>%
+  #filter(parentesco1==1)%>%
+  #select(parentesco1,idhogar,Target)%>%
+  mutate(Target=Target[1])#%>%
+  #filter(idhogar=='0172ab1d9')
+  #arrange(desc(parentesco1))#%>%
+
+#new_train
+# handling cases which dont have head of family 
+cat("\nNumber of households with no heads:\n")
+nrow(train %>%
+	group_by(idhogar)%>%
+  summarise(parentesco1_sum = sum(parentesco1))%>%
+  filter(parentesco1_sum==0))
+  
+check_train<-train %>%
+	group_by(idhogar)%>%
+  mutate(parentesco1_sum=sum(parentesco1))%>%
+  #summarise(parentesco1_sum = sum(parentesco1))%>%
+  filter(parentesco1_sum==0)%>%
+   filter(length(unique(Target))>1)%>%
+  select(parentesco1,idhogar,Target)
+
+cat("no of rows in the subset that shows Households with no heads, having different labels.\n")
+nrow(check_train)
+  
+cat("observation: since nrow of this data subset is 0(no data): the target variables are all identical for members without head of the family, hence no additional change needs to be made \n")
+
+#finally checking if each houshold entry has same label
+cat("Finally seeing number of household entries with different labels:")
+nrow(new_train %>%
+	group_by(idhogar)%>%
+  filter(length(unique(Target))>1))
+
+cat("As zero entries, the given subtask is completed")
+
+```
+```{r}
+cat("Handling categorical and non numeric data values ")
+lapply(new_train, class)
+```
