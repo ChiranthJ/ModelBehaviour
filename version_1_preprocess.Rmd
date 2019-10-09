@@ -43,6 +43,15 @@ table(is.na(train))
 na_count <- sort(colSums(is.na(train)),decreasing = TRUE)
 na_count <- data.frame(names=names(na_count), count=na_count)
 print(na_count)
+
+table(is.na(test))
+
+#finding no of empty values for each column
+#sapply(train, function(x) sum(is.na(x)))
+
+na_count1 <- sort(colSums(is.na(test)),decreasing = TRUE)
+na_count1 <- data.frame(names=names(na_count1), count=na_count1)
+print(na_count1)
 ```
 ```{r}
 #subsetting dataset to get only columns with members being head of household as they determine the target variable
@@ -99,6 +108,37 @@ cat("As zero entries, the given subtask is completed")
 
 ```
 ```{r}
-cat("Handling categorical and non numeric data values ")
-lapply(new_train, class)
+cat("Handling categorical and non numeric data values \n")
+#class(new_train$dependency)
+#new_train %>% select_if(funs(!is.numeric(.))) %>% head()
+colnames(new_train %>%  select_if(is.factor))
+
+cat("\nit can be seen 5 columns have type factor: out of which idhogar and Id can be ignored as they are unique values to distinguish between rows")
+```
+```{r}
+newdata <- subset(new_train,select=c(dependency, edjefe,edjefa))
+```
+```{r}
+sort(unique(newdata$dependency))
+new_train$dependency <- as.character(new_train$dependency)
+new_train$dependency[which(new_train$dependency=="yes")] <- "1"
+new_train$dependency[which(new_train$dependency=="no")] <- "0"
+new_train$dependency <- as.numeric(new_train$dependency)
+
+new_train$edjefe <- as.character(new_train$edjefe)
+new_train$edjefe[which(new_train$edjefe=="yes")] <- "1"
+new_train$edjefe[which(new_train$edjefe=="no")] <- "0"
+new_train$edjefe <- as.numeric(new_train$edjefe)
+
+new_train$edjefa <- as.character(new_train$edjefa)
+new_train$edjefa[which(new_train$edjefa=="yes")] <- "1"
+new_train$edjefa[which(new_train$edjefa=="no")] <- "0"
+new_train$edjefa <- as.numeric(new_train$edjefa)
+
+new_train_data<- subset(new_train,select=c(dependency, edjefe,edjefa))
+sort(unique(new_train_data$dependency))
+```
+```{r}
+new_train %>%  select_if(is.factor)
+summary(new_train_data)
 ```
