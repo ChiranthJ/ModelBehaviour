@@ -232,6 +232,106 @@ print(na_count[na_count$count>0, ])
 ```{r}
 #handling missing values in v2a1 : Monthly rent payment
 
+cat("subset of data where they own the house and rent value is unknown-> replace with 0")
+subset(new_train,select=c(v2a1,tipovivi1))[new_train$tipovivi1==1 & is.na(new_train$v2a1),]
+new_train$v2a1[new_train$tipovivi1==1 & is.na(new_train$v2a1)]<-0
+```
 
+
+```{r}
+#subset(new_train,select=c(v2a1,tipovivi1))[is.na(new_train$v2a1),]
+cat(" replace rest of the NA values with the mean of the rent value for that group of poverty(target)")
+means<-new_train %>%
+    group_by(Target) %>%
+    summarise(Mean=mean(v2a1, na.rm = T))
+means
+a<-as.numeric(as.character(unlist(means[[2]][[1]])))
+#means[[2]][[1]]
+#mean(new_train$v2a1, na.rm = T)
+#typeof(a)
+new_train_temp<-new_train
+new_train_temp <- new_train_temp %>% group_by(Target) %>% mutate(num_avg = mean(v2a1,na.rm=T))
+new_train_temp$v2a1[is.na(new_train_temp$v2a1)] <- new_train_temp$num_avg[is.na(new_train_temp$v2a1)]
+#new_train_temp$v2a1[is.na(new_train_temp$v2a1)] <- new_train_temp$num_avg[is.na(new_train_temp$v2a1)]
+
+#subset(new_train_temp)
+new_train<-new_train_temp
+```
+```{r}
+cat("checking columns with NA values\n")
+na_count <- sort(colSums(is.na(new_train)),decreasing = TRUE)
+na_count <- data.frame(names=names(na_count), count=na_count)
+#print(na_count)
+print(na_count[na_count$count>0, ])
+```
+```{r}
+subset(new_train,select=c(idhogar,age,meaneduc,escolari))
+
+cat("from this subset it can be observed that meaneduc is calculated by grouping based on each household, finding the mean of escolari(no of years of education) for all those whose age is above 18, now lets analyze if trend follows for missing values\n\n")
+
+subset(new_train,select=c(idhogar,age,meaneduc,SQBmeaned,escolari))[is.na(new_train$meaneduc),]
+
+cat(" now we list down the data of all members of households which have certains rows with NA for meaneduc\n ")
+
+#subset(new_train,select=c(idhogar,age,meaneduc,SQBmeaned,escolari))[new_train$idhogar=='1b31fd159'| new_train$idhogar=='a874b7ce7' | new_train$idhogar=='faaebf71a',]
+
+cat(" for values with age above 18, find mean of escolari, but since the SQBmeaned in the description inludes age 18, and the missing values rows are of age 18 and 19 , we will include 18 and calculate the mean\n ")
+
+new_train_temp<-new_train
+new_train_temp <- new_train_temp %>% group_by(idhogar) %>% mutate(num_avg = mean(escolari[age>=18]))
+#new_train_temp$v2a1[is.na(new_train_temp$v2a1)] <- new_train_temp$num_avg[is.na(new_train_temp$v2a1)]
+subset(new_train_temp,select=c(idhogar,age,meaneduc,escolari,num_avg))[is.na(new_train_temp$meaneduc),]
+#revaluating meaneduc value
+new_train_temp$meaneduc[is.na(new_train_temp$meaneduc)] <- new_train_temp$num_avg[is.na(new_train_temp$meaneduc)]
+#revaluating SQBmeaned value
+new_train_temp$SQBmeaned[is.na(new_train_temp$SQBmeaned)] <- new_train_temp$num_avg[is.na(new_train_temp$SQBmeaned)]*new_train_temp$num_avg[is.na(new_train_temp$SQBmeaned)]
+
+subset(new_train_temp,select=c(idhogar,age,meaneduc,SQBmeaned,escolari))[new_train$idhogar=='1b31fd159'| new_train$idhogar=='a874b7ce7' | new_train$idhogar=='faaebf71a',]
+
+new_train<-new_train_temp
+new_train <- subset( new_train, select = -c(num_avg) )
+```
+```{r}
+#new_train <- subset( new_train, select = -c(num_avg) )
+cat("checking count of rows with NA values\n")
+na_count <- sort(colSums(is.na(new_train)),decreasing = TRUE)
+na_count <- data.frame(names=names(na_count), count=na_count)
+#print(na_count)
+print(nrow(na_count[na_count$count>0, ])) 
+
+cat(" it can be seen that all missing vakues have been taken care off, finally rechecking dimensions of the dataset\n")
+dim(new_train)
+
+```
+
+```{r}
+#new_train[ , which( !duplicated( t( new_train ) ) ) ]
+#names(new_train)
+Missing <- setdiff(names(new_train), names(new_train[!duplicated(as.list(new_train))]))
+#colnames(new_train)-colnames(new_train[!duplicated(as.list(new_train))])
+cat("list of columns that are duplicates:\n")
+Missing
+
+cat("dropping these columns, new dimensions:\n ")
+new_train<-new_train[!duplicated(as.list(new_train))]
+dim(new_train)
+```
+```{r}
+cat("creating another dataframe by dropping columns with squared values ( this is specific to only certain models and hence may not be very useful\n")
+new_train_wosq <- subset( new_train, select = -c(SQBescolari,
+SQBage,
+SQBhogar_total, 
+SQBedjefe,
+SQBhogar_nin, 
+SQBovercrowding, 
+SQBdependency, 
+SQBmeaned) ) #w/o square
+
+cat("dimensions of dataframe without squared columns:\n")
+dim(new_train_wosq)
+```
+```{r}
+write.csv(new_train, file = "preprocessed.csv",row.names=FALSE)
+write.csv(new_train_wosq, file = "preprocessed_wosq.csv",row.names=FALSE)
 ```
 
