@@ -119,6 +119,8 @@ cat("\nit can be seen 5 columns have type factor: out of which idhogar and Id ca
 newdata <- subset(new_train,select=c(dependency, edjefe,edjefa))
 ```
 ```{r}
+
+#entires given as yes mostly refer to those which have ratio with denominator as 0 , hence we are replacing them by 1 ( for example i n dependency column saying that they depend on themselves hence 1. 
 sort(unique(newdata$dependency))
 new_train$dependency <- as.character(new_train$dependency)
 new_train$dependency[which(new_train$dependency=="yes")] <- "1"
