@@ -15,7 +15,9 @@ knitr::opts_chunk$set(echo = TRUE)
 #library(tidyverse)
 library(grid)
 library(gridExtra)
+#library(plyr)
 library(dplyr)
+#library(plyr)
 ```
 ## R Markdown
 
@@ -42,7 +44,8 @@ table(is.na(train))
 
 na_count <- sort(colSums(is.na(train)),decreasing = TRUE)
 na_count <- data.frame(names=names(na_count), count=na_count)
-print(na_count)
+#print(na_count)
+print(na_count[na_count$count>0, ])
 
 table(is.na(test))
 
@@ -51,7 +54,7 @@ table(is.na(test))
 
 na_count1 <- sort(colSums(is.na(test)),decreasing = TRUE)
 na_count1 <- data.frame(names=names(na_count1), count=na_count1)
-print(na_count1)
+#print(na_count)
 ```
 ```{r}
 #subsetting dataset to get only columns with members being head of household as they determine the target variable
@@ -117,11 +120,15 @@ cat("\nit can be seen 5 columns have type factor: out of which idhogar and Id ca
 ```
 ```{r}
 newdata <- subset(new_train,select=c(dependency, edjefe,edjefa))
+subset(train,select=c(dependency,SQBdependency,edjefe,SQBedjefe))
+cat(" with this subset it can be observed that all no's in dependency correspond to 0 in the SQBdependency column similarly 'yes': correspnds to one. Hence , replacing all yes with 1 and no with 0 for the three factoor columns")
 ```
 ```{r}
-
-#entires given as yes mostly refer to those which have ratio with denominator as 0 , hence we are replacing them by 1 ( for example i n dependency column saying that they depend on themselves hence 1. 
+cat("all unique values dependency, edjefe, edjefa take:\n")
 sort(unique(newdata$dependency))
+sort(unique(newdata$edjefe))
+sort(unique(newdata$edjefa))
+
 new_train$dependency <- as.character(new_train$dependency)
 new_train$dependency[which(new_train$dependency=="yes")] <- "1"
 new_train$dependency[which(new_train$dependency=="no")] <- "0"
@@ -138,9 +145,93 @@ new_train$edjefa[which(new_train$edjefa=="no")] <- "0"
 new_train$edjefa <- as.numeric(new_train$edjefa)
 
 new_train_data<- subset(new_train,select=c(dependency, edjefe,edjefa))
+cat("\nall unique values dependency, edjefe, edjefa take after replacing yes and no:\n")
 sort(unique(new_train_data$dependency))
+sort(unique(new_train_data$edjefe))
+sort(unique(new_train_data$edjefa))
 ```
 ```{r}
 new_train %>%  select_if(is.factor)
 summary(new_train_data)
 ```
+```{r}
+cat("Handling missing values\n")
+
+na_count[na_count$count>0, ]
+
+#handling rez_esc
+cat("proportion of values missing in rez_esc(Years behind in school):\n")
+print(na_count$count[1]/nrow(new_train))
+
+#in this missing dataset, checking who all are actually students, and who all dont belong to schooling age(as suggested for other columns(7 to 19) ) (default set to 0)
+
+new_DF <- subset(new_train, !is.na(new_train$rez_esc))
+new_DF1 <- subset(new_train, is.na(new_train$rez_esc))
+summary(new_DF$age)
+summary(new_DF1$age)
+cat("since the range of filled values are between age groups of 7 to 17, we can assume that for ages above or below this be given default 0 value")
+
+#sort(new_DF1$age)
+#subset(new_DF1, age>6 & age<19)
+#new_DF1[new_DF1$date>4 & df$date<6, ]
+
+```
+
+
+```{r}
+new_train$rez_esc[is.na(new_train$rez_esc) & (new_train$age<7 | new_train$age>17)]<-0    
+```
+
+```{r}
+new_DF <- subset(new_train, !is.na(new_train$rez_esc))
+new_DF1 <- subset(new_train, is.na(new_train$rez_esc))
+summary(new_DF$age)
+summary(new_DF1$age)
+#a<- subset(new_train,is.na(rez_esc))['Id']
+#a<-str(a['Id'])
+
+cat("since there is only 1 row within the schooling age which has the rez_esc as NA, we will replace this with mean of other values it")
+
+new_train$rez_esc[is.na(new_train$rez_esc)]<-mean(new_train$rez_esc, na.rm=TRUE)
+
+```
+```{r}
+nrow(subset(new_train, is.na(new_train$rez_esc)))
+cat("since nrow value is 0 all missing values have been taken care of in this column")
+na_count <- sort(colSums(is.na(new_train)),decreasing = TRUE)
+na_count <- data.frame(names=names(na_count), count=na_count)
+#print(na_count)
+print(na_count[na_count$count>0, ])
+
+```
+
+```{r}
+#handling missing values in v18q1 : number of tablets owned by a family.
+new_train %>%
+    group_by(v18q1) %>%
+    summarise(count=n())
+cat("there are 2 possibilities as to why the value is NA 1) The data hasnt been filled 2) The no of tablets owned is 0\n since v18q column tells whether or not the household owns a laptop,we will compare to see if NA values in v18q1 correspons to 0 in v18q")
+
+subset(new_train,select=c(v18q,v18q1))[new_train$v18q==0,] %>%
+    distinct(v18q, v18q1, .keep_all = TRUE)
+
+cat(" since each 0 value in v18q is mapped to NA in v18q1, we can fill NAs in v18q1 with 0 and discard column v18q")
+
+new_train$v18q1[is.na(new_train$v18q1)]<-0
+```
+
+```{r}
+temp <- subset(new_train, is.na(new_train$v18q1))
+nrow(temp)
+cat("missing values for this column have been taken care of")
+na_count <- sort(colSums(is.na(new_train)),decreasing = TRUE)
+na_count <- data.frame(names=names(na_count), count=na_count)
+#print(na_count)
+print(na_count[na_count$count>0, ])
+```
+```{r}
+#handling missing values in v2a1 : Monthly rent payment
+
+
+```
+
