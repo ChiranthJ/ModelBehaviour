@@ -15,24 +15,32 @@ output: html_document
 #install.packages("gridExtra")
 #install.packages("glmnet")
 #install.packages("hrbrthemes")
+#install.packages("tidyverse")
+#install.packages("corrplot")
+#install.packages("plotly")
+#install.packages("dplyr")
 library(tidyverse) # importing, cleaning, visualising
 library(corrplot) # correlation visualisation
-library(ggthemes) # extra plotting themes
+#library(ggthemes) # extra plotting themes
 library(plotly) # interactive plots
-library(factoextra) # pca visualisation
-library(Rtsne) # visualisation of high dimensional datsets
-library(breakDown) # visualising model results
+#library(factoextra) # pca visualisation
+#library(Rtsne) # visualisation of high dimensional datsets
+#library(breakDown) # visualising model results
 library(gridExtra) # arranging plots
-library(glmnet) # regularised regression
+library(tidyr)
+#library(glmnet) # regularised regression
 library(corrgram)
+library(tidyr)
 library(dplyr)
 library(grid)
-library(viridis)
-library(hrbrthemes)
-library(gridExtra)
-library(lattice)
+#library(viridis)
+#library(hrbrthemes)
+#library(gridExtra)
+#library(lattice)
 ```
 ```{r}
+#path of uncleaned dataset
+Train= read.csv("C:\\Users\\diyas\\Desktop\\SEM5\\Data_Analytics\\Project\\train.csv")
 #paths for dataset that has already been cleaned and preprocessed
 Train1= read.csv("C:\\Users\\diyas\\Desktop\\SEM5\\Data_Analytics\\Project\\ModelBehaviour-master\\preprocessed.csv")
 Train2= read.csv("C:\\Users\\diyas\\Desktop\\SEM5\\Data_Analytics\\Project\\ModelBehaviour-master\\preprocessed_wosq.csv")
@@ -65,10 +73,72 @@ ylab("Target Classes Count")
 
 cat("There are 4 different target classes as shown in the graph and the count of households in each class is depicted")
 ```
+```{r,fig.height = 7, fig.width = 9}
+#correlation matrix before cleaning
 
-```{r}
-#correlation matrix
-cat("Since there are 143 attributes, top twenty attritutes that are highly correlated with the target are extracted and the correlation matrix for these has been shown.")
+#using the preprocessed data with 143 columns
+cat("This is a correlation matrix before cleaning and preproceesing.\n")
+cat("Since there are 143 attributes, top twenty attritutes that are highly correlated with the target are extracted and the correlation matrix for these has been shown.\n")
+
+#finding top twenty attritutes highly correlated with the target
+z = cor(Train[sapply(Train, function(x) is.numeric(x))])
+zdf = as.table(z)%>%
+  as.data.frame()%>%
+  filter(grepl('Target', Var1))%>%
+  na.omit()%>%
+  transmute(Feature = Var2, abs_cor = abs(Freq))%>%
+  arrange(-abs_cor)%>%
+  head(20)
+#top twenty features and correlation value
+imp_features=zdf
+
+#we get the following features
+zdf$Feature = c("Poverty Class",
+				"Number Of Children",
+				"Number of children younger than 12",
+				 "Square of Number Of Children",
+				 "If the house has ceiling",
+				 "Years of education",
+				 "Sqaure of years of education",
+                 "If floor are good",
+                  "If walls are good",
+                  "People per room",
+                  "If material on floor is mosaic,ceramic,terrazo",
+                  "If material on outside wall is block,brick",
+                  "Sqaure of overcrowding",
+                  "if roof is good",
+                  "Females younger than 12 years of age",          
+                  "Square Years of education of male head of household",
+                  "Owns a tablet",
+                   "Males younger than 12 years of age",
+                   "Number of rooms in household",
+                  "undergraduate and higher education"
+                  )
+
+
+
+#bar plot of top twenty correlated features
+ggplot(zdf, aes(reorder(Feature, abs_cor),abs_cor))+geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Features with Highest Correlation to Poverty Class", subtitle = 'Absolute value of correlation',y = "Poverty Class", x = "Attribute") +
+  theme_bw()
+
+#creating a dataframe with only important features
+train7=subset(Train,select=as.vector(imp_features$Feature))
+train_n <- sapply(train7 , as.numeric )
+res <- as.matrix(cor(train_n))
+options(repr.plot.width=10,repr.plot.height=10)
+
+#plotting a correlation matrix to show
+corrplot(res,order = "hclust", tl.cex = 0.5)
+rm(train_n,res)
+```
+
+```{r,fig.height = 7, fig.width = 9}
+#correlation matrix after cleaning
+cat("This is a correlation matrix after cleaning and preproceesing\n")
+#using the preprocessed data with 140 columns
+cat("Since there are 140 attributes, top twenty attritutes that are highly correlated with the target are extracted and the correlation matrix for these has been shown.\n")
 
 #finding top twenty attritutes highly correlated with the target
 z = cor(Train1[sapply(Train1, function(x) is.numeric(x))])
@@ -83,6 +153,27 @@ zdf = as.table(z)%>%
 imp_features=zdf
 
 #we get the following features
+zdf$Feature = c("Poverty Class",
+                  "AverageYearsOfEducationForAdults",
+                  "Number Of Children",
+                  "Number of children younger than 12",
+                  "Square of Number Of Children",
+                  "If the house has ceiling",
+                  "Years of education",
+                  "Sqaure of years of education",
+                  "If floor are good",
+                  "If walls are good",
+                  "People per room",
+                  "If material on floor is mosaic,ceramic,terrazo",
+                  "Square of the mean years of education of adults in household",
+                  "If material on outside wall is block,brick",
+                  "Overcrowding sqaure",
+                  "Females younger than 12 years of age",
+                  "if roof is good",
+                  "Sqaure of years of education of male head of household",
+                  "Years of education of male head of household",
+                  "owns a tablet")
+
 #bar plot of top twenty correlated features
 ggplot(zdf, aes(reorder(Feature, abs_cor),abs_cor))+geom_bar(stat = "identity") +
   coord_flip() +
@@ -90,10 +181,8 @@ ggplot(zdf, aes(reorder(Feature, abs_cor),abs_cor))+geom_bar(stat = "identity") 
   theme_bw()
 
 #creating a dataframe with only important features
-train7=Train1 %>%
-  select(imp_features$Feature)
-train_n <- train7 %>% replace(., is.na(.), -1)
-train_n <- sapply(train_n , as.numeric )
+train7=subset(Train1,select=as.vector(imp_features$Feature))
+train_n <- sapply(train7 , as.numeric )
 res <- as.matrix(cor(train_n))
 options(repr.plot.width=10,repr.plot.height=10)
 
@@ -101,6 +190,65 @@ options(repr.plot.width=10,repr.plot.height=10)
 corrplot(res,order = "hclust", tl.cex = 0.5)
 rm(train_n,res)
 ```
+```{r,fig.height = 7, fig.width = 9}
+#correlation matrix after cleaning
+cat("This is a correlation matrix before cleaning and preproceesing and removing sqaured columns as explained in the preprocessing\n")
+#using the preprocessed data with 132 columns
+#extra columns have been removed during preprocessing
+
+cat("Since there are 132 attributes, top twenty attritutes that are highly correlated with the target are extracted and the correlation matrix for these has been shown.\n")
+
+#finding top twenty attritutes highly correlated with the target
+z = cor(Train2[sapply(Train2, function(x) is.numeric(x))])
+zdf = as.table(z)%>%
+  as.data.frame()%>%
+  filter(grepl('Target', Var1))%>%
+  na.omit()%>%
+  transmute(Feature = Var2, abs_cor = abs(Freq))%>%
+  arrange(-abs_cor)%>%
+  head(20)
+#top twenty features and correlation value
+imp_features=zdf
+zdf$Feature = c("Poverty Class",
+                  "AverageYearsOfEducationForAdults",
+                  "Number Of Children",
+                  "Number of children younger than     12",
+                  "If the house has ceiling",
+                  "Years of education",
+                  "If floor are good",
+                  "If walls are good",
+                  "People per room",
+                  "If material on floor is    mosaic,ceramic,terrazo",
+                 
+                  "If material on outside wall is block,brick","Females younger than 12 years of age",
+                  "if roof is good",          
+                  "Years of education of male head of household",
+                  "owns a tablet",
+                  "Males younger than 12 years of age",
+                  " number of rooms in the house",
+                  "undergraduate and higher education",
+                  "If floor are bad",
+                  "if predominant material on the floor is cement")
+
+#we get the following features
+#bar plot of top twenty correlated features
+ggplot(zdf, aes(reorder(Feature, abs_cor),abs_cor))+geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Features with Highest Correlation to Poverty Class", subtitle = 'Absolute value of correlation',y = "Poverty Class", x = "Attribute") +
+  theme_bw()
+
+#creating a dataframe with only important features
+train7=subset(Train1,select=as.vector(imp_features$Feature))
+train_n <- sapply(train7 , as.numeric )
+res <- as.matrix(cor(train_n))
+options(repr.plot.width=10,repr.plot.height=10)
+
+#plotting a correlation matrix to show
+corrplot(res,order = "hclust", tl.cex = 0.5)
+rm(train_n,res)
+
+```
+
 ```{r}
 #analysis of poverty class based on location of the household(urban/rural) 
 Location = new_train%>% 
@@ -159,7 +307,7 @@ guides(fill = guide_legend('Class'))
 
 grid.arrange(t2,t3,t5,t6,nrow = 2)
 ```
-```{r}
+```{r,fig.height = 6, fig.width = 10}
 #poverty levels with respect to members of household
 prop= new_train%>% 
   select(hogar_nin,hogar_adul,hogar_mayor, Target) %>%
@@ -174,7 +322,7 @@ ggplot(prop, aes(Target,Percentage)) +
   labs(title = "Poverty By Propotion of people", x = "Poverty Class", y = "Propotion Of people") +
   theme_bw()
 ```
-```{r}
+```{r,fig.height = 8, fig.width = 10}
 #Status of members in the household
 Status= new_train%>% 
   select(estadocivil1,estadocivil2,estadocivil3,estadocivil4,estadocivil5,estadocivil6,estadocivil7, Target) %>%
@@ -203,7 +351,7 @@ p1
 <h5>2 - Moderate Poverty</h5>
 <h5>3 - Vulnerable Households</h5>
 <h5>4 - Non-vulnerable Households</h5>
-```{r}
+```{r,fig.height = 8, fig.width = 10}
 #What do households own
 
 #check whether they own a television
@@ -212,7 +360,8 @@ ggplot(aes(as.factor(television)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
 labs(x = "Owns a television?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
-scale_x_discrete(labels = c("No", "Yes"))
+scale_x_discrete(labels = c("No", "Yes"))+theme(legend.title = element_text(size = 8), 
+               legend.text = element_text(size = 8))
 
 #check whether they own a computer or notebook
 p2=new_train1%>%
@@ -220,7 +369,8 @@ ggplot(aes(as.factor(computer)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
 labs(x = "Owns a Computer?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
-scale_x_discrete(labels = c("No", "Yes"))
+scale_x_discrete(labels = c("No", "Yes"))+theme(legend.title = element_text(size = 8), 
+               legend.text = element_text(size = 8))
 
 #check whether they own a mobile phone
 p3=new_train1%>%
@@ -228,7 +378,8 @@ ggplot(aes(as.factor(mobilephone)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
 labs(x = "Owns a mobile phone?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
-scale_x_discrete(labels = c("No", "Yes"))
+scale_x_discrete(labels = c("No", "Yes"))+theme(legend.title = element_text(size = 8), 
+               legend.text = element_text(size = 8))
 
 #check whether they own a refridgerator
 p4=new_train1%>%
@@ -236,7 +387,8 @@ ggplot(aes(as.factor(refrig)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
 labs(x = "Owns a Refrigerator?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
-scale_x_discrete(labels = c("No", "Yes"))
+scale_x_discrete(labels = c("No", "Yes"))+theme(legend.title = element_text(size = 8), 
+               legend.text = element_text(size = 8))
 
 #check whether they own a tablet
 p5=new_train1%>%
@@ -244,12 +396,13 @@ ggplot(aes(as.factor(v18q)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
 labs(x = "Owns a Tablet?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
-scale_x_discrete(labels = c("No", "Yes"))
+scale_x_discrete(labels = c("No", "Yes"))+theme(legend.title = element_text(size = 8), 
+               legend.text = element_text(size = 8))
 
 grid.arrange(p1,p2,p3,p4,p5,nrow = 3)
 ```
 
-```{r}
+```{r,fig.height = 6, fig.width = 10}
 #analysis of household size per poverty class
 new_train%>%
 ggplot(aes(as.factor(tamhog)))+
@@ -257,8 +410,10 @@ geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alp
 labs(x = "Household size", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))
 ```
-```{r}
+```{r,fig.height = 8, fig.width = 10}
 #analysis of basic household amenities  per poverty level
+
+#analysis of whether a Bathroom is present in a household  per poverty level
 a1=new_train1%>%
 ggplot(aes(as.factor(v14a)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
@@ -266,6 +421,7 @@ labs(x = "Bathroom in the HouseHold?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
 scale_x_discrete(labels = c("No", "Yes"))
 
+#analysis of whether Water is present in a household  per poverty level
 a2=new_train1%>%
 ggplot(aes(as.factor(abastaguano)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
@@ -273,6 +429,7 @@ labs(x = "Water provision in the HouseHold?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
 scale_x_discrete(labels = c("Yes", "No"))
 
+#analysis of whether Electricity is present in a household  per poverty level
 a3=new_train1%>%
 ggplot(aes(as.factor(noelec)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
@@ -280,7 +437,7 @@ labs(x = "Electricity in the HouseHold?", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))+
 scale_x_discrete(labels = c("Yes", "No"))
 
-
+#analysis of whether a Toilet is present in a household  per poverty level
 a4=new_train1%>%
 ggplot(aes(as.factor(sanitario1)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
@@ -346,7 +503,7 @@ p<-ggplot(data=new_train,aes(x = tamviv,y=rooms)) +
 labs(title = "Poverty Levels with respect to Number of Rooms and People Living", y = "Rooms",x="Number of People living in the household")
 p
 ```
-```{r}
+```{r,fig.height = 8, fig.width = 10}
 #scatterplot between age of the house and monthly rent
 target<-subset(new_train, new_train$parentesco1==1)
 ggplot(target, aes(x = v2a1, y = age)) +
@@ -354,6 +511,7 @@ ggplot(target, aes(x = v2a1, y = age)) +
 ```
 <h4>Visualizations on Education levels of members of Household</h4>
 ```{r}
+#creating an extra column for gender
 target$gen<-NA
 target$gen[target$male == 1] = 'Male'
 target$gen[target$female == 1] = 'Female'
@@ -370,7 +528,8 @@ cat("It can be clearly inferred that the average years of education for female h
 ```
 
 
-```{r}
+```{r,fig.height = 5, fig.width = 10}
+#analysis of effect of Education Details and Household Size on Poverty Levels
 new_train$education<-NA
 new_train$education[new_train$instlevel1 == 1] = 'NoEducation'
 new_train$education[new_train$instlevel2 == 1] = 'IncompletePrimary'
@@ -385,7 +544,8 @@ new_train$education[new_train$instlevel9 == 1] = 'PostgraduateHigherEducation'
 ggplot(data = new_train, aes(x=education, y=tamviv)) + geom_boxplot(aes(fill=Target))+theme(axis.text.x=element_text(angle=90, hjust=1))+labs(title = "Effect of Education Details and Household Size on Poverty Levels", x = "Education Level", y = "Household size")
 ```
 
-```{r}
+```{r,fig.height = 8, fig.width = 10}
+#analysis of education level based on gender for each poverty
 new_train$gen<-NA
 new_train$gen[new_train$male == 1] = 'Male'
 new_train$gen[new_train$female == 1] = 'Female'
@@ -393,7 +553,8 @@ new_train$gen[new_train$female == 1] = 'Female'
 ggplot(new_train, aes(x = gen, y = v2a1, fill = education)) + 
   geom_bar(stat = 'identity',position = 'stack') + facet_grid(~Target)+labs(title = "Poverty By education level", subtitle = "Shows the split between levels of education for each poverty designation for each gender", x = "Poverty Class", y = "Monthly income") 
 ```
-```{r}
+```{r,fig.height = 7, fig.width = 10}
+#Analysis of education level per poverty class
 education= new_train1%>% 
   select(instlevel1,instlevel2,instlevel3,instlevel4,instlevel5,instlevel6, Target) %>%
   filter(!is.na(instlevel1),!is.na(instlevel2),!is.na(instlevel3),!is.na(instlevel4),!is.na(instlevel5),!is.na(instlevel6)) %>%
