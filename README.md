@@ -8,5 +8,10 @@ Classficiation of households based on poverty level for allocation of welfare be
 ## Short description of the project
 This project focuses on prediction of poverty levels of households based on socio-economic factors and classifies them into 4 distinct categories. Features selection and level classification on a data set containing household characteristics of a representative sample of Costa Rican households allows accurate insights into features to enable local development in the required areas and appropriate allotment of funds for social welfare benefits.
 
+## Description of files
+RawData: contains test.csv and train.csv
+version_1_preprocess.Rmd: R markdown file used for data cleaning and preprocessing
+
+
 
 
