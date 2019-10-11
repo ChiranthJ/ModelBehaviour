@@ -1,61 +1,77 @@
 ---
-title: "eda"
+title: "EDA_FINAL"
 author: "Diya Chandra"
-date: "09/10/2019"
+date: "11/10/2019"
 output: html_document
 ---
 
 ```{r}
-install.packages("hrbrthemes")
-library(tidyverse) 
+#libraries and packages used 
+#install.packages("ggthemes")
+#install.packages("factoextra")
+#install.packages("Rtsne")
+#install.packages("largeVis")
+#install.packages("breakDown")
+#install.packages("gridExtra")
+#install.packages("glmnet")
+#install.packages("hrbrthemes")
+library(tidyverse) # importing, cleaning, visualising
+library(corrplot) # correlation visualisation
+library(ggthemes) # extra plotting themes
+library(plotly) # interactive plots
+library(factoextra) # pca visualisation
+library(Rtsne) # visualisation of high dimensional datsets
+library(breakDown) # visualising model results
+library(gridExtra) # arranging plots
+library(glmnet) # regularised regression
+library(corrgram)
+library(dplyr)
 library(grid)
 library(viridis)
 library(hrbrthemes)
 library(gridExtra)
-```
-
-```{r}
-Train= read_csv("C:\\Users\\diyas\\Desktop\\SEM5\\Data_Analytics\\Project\\train.csv")
-Test= read_csv("C:\\Users\\diyas\\Desktop\\SEM5\\Data_Analytics\\Project\\test.csv")
-train2=Train
+library(lattice)
 ```
 ```{r}
-#head(Train)
-#rename the target values
-Train$Target[Train$Target == 1] = 'Extreme Poverty'
-Train$Target[Train$Target == 2] = 'Moderate Poverty'
-Train$Target[Train$Target == 3] = 'Vulnerable Household'
-Train$Target[Train$Target == 4] = 'Non-Vulnerable Household'
-
+#paths for dataset that has already been cleaned and preprocessed
+Train1= read.csv("C:\\Users\\diyas\\Desktop\\SEM5\\Data_Analytics\\Project\\ModelBehaviour-master\\preprocessed.csv")
+Train2= read.csv("C:\\Users\\diyas\\Desktop\\SEM5\\Data_Analytics\\Project\\ModelBehaviour-master\\preprocessed_wosq.csv")
 ```
-
+<h4>Poverty Classes</h4>
+<h5>1 - Extreme Poverty</h5>
+<h5>2 - Moderate Poverty</h5>
+<h5>3 - Vulnerable Households</h5>
+<h5>4 - Non-vulnerable Households</h5>
 ```{r}
-#analysis of target variable
-Train %>%
+#making two copies of the main training datasets
+new_train=Train1
+new_train1=Train1
+new_train2=Train1
+
+#renaming the column based on each Poverty Class
+new_train$Target[new_train$Target == 1] = 'Extreme Poverty'
+new_train$Target[new_train$Target == 2] = 'Moderate Poverty'
+new_train$Target[new_train$Target == 3] = 'Vulnerable Household'
+new_train$Target[new_train$Target == 4] = 'Non-Vulnerable Household'
+```
+<h4>Exploratory Data Analysis</h4>
+```{r}
+#analysis of the target variable
+new_train%>%
 ggplot(aes(Target))+
-geom_bar(color = 'black', fill = 'tomato')+
+geom_bar(color = 'black', fill = 'steelblue')+
 xlab("Target Classes")+
 ylab("Target Classes Count")
 
+cat("There are 4 different target classes as shown in the graph and the count of households in each class is depicted")
 ```
 
-
 ```{r}
-#creating seperate dataframes for each target class
-```
+#correlation matrix
+cat("Since there are 143 attributes, top twenty attritutes that are highly correlated with the target are extracted and the correlation matrix for these has been shown.")
 
-
-```{r}
-#analysing factors for different target classes
-Train %>%
-ggplot(aes(x =Target,y=v2a1))+
- geom_bar()+ 
-labs(title =" Monthly Rent Payment by Target", x = "Monthly Rent", y = "Number of Instances", size = 15)
-```
-```{r}
-#finding attritutes highly correalted with target
-z = cor(train2[sapply(train2, function(x) is.numeric(x))])
-#finding top ten correlted features
+#finding top twenty attritutes highly correlated with the target
+z = cor(Train1[sapply(Train1, function(x) is.numeric(x))])
 zdf = as.table(z)%>%
   as.data.frame()%>%
   filter(grepl('Target', Var1))%>%
@@ -63,71 +79,31 @@ zdf = as.table(z)%>%
   transmute(Feature = Var2, abs_cor = abs(Freq))%>%
   arrange(-abs_cor)%>%
   head(20)
-#top ten features and correlation value
+#top twenty features and correlation value
 imp_features=zdf
 
 #we get the following features
-
-
+#bar plot of top twenty correlated features
 ggplot(zdf, aes(reorder(Feature, abs_cor),abs_cor))+geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Features with Highest Correlation to Poverty Designation", subtitle = 'Absolute value of correlation',y = "Poverty Designation", x = "Feature") +
+  labs(title = "Features with Highest Correlation to Poverty Class", subtitle = 'Absolute value of correlation',y = "Poverty Class", x = "Attribute") +
   theme_bw()
 
-p<-ggplot(Train, aes(x=Target, y=v2a1)) +
-  geom_line()
-p
-
-
-```
-```{r}
 #creating a dataframe with only important features
-train7=train2 %>%
+train7=Train1 %>%
   select(imp_features$Feature)
-
-#zdf
-
-
-
-```
-
-```{r}
-#Correlation of the top twenty variables
 train_n <- train7 %>% replace(., is.na(.), -1)
 train_n <- sapply(train_n , as.numeric )
 res <- as.matrix(cor(train_n))
 options(repr.plot.width=10,repr.plot.height=10)
+
+#plotting a correlation matrix to show
 corrplot(res,order = "hclust", tl.cex = 0.5)
 rm(train_n,res)
 ```
-
 ```{r}
-#correlation with all variables
-train_n <- Train %>% select(-Id)
-train_n <- train_n %>% replace(., is.na(.), -1)
-train_n <- sapply(train_n , as.numeric )
-res <- as.matrix(cor(train_n))
-options(repr.plot.width=10,repr.plot.height=10)
-corrplot(res)
-rm(train_n,res)
-```
-```{r}
-#EDA
-
-#Na not replaced
-ggplot(train2, aes( x = factor(Target),  y = v2a1)) + geom_boxplot() + labs(x = "Poverty Level", y = "Monthly Rent Payment") 
-```
-
-```{r}
-#household income
-#6870 Na values
-summary(train2$v2a1)
-#Na values for each Target column
-table(is.na(train2$v2a1), train2$Target)
-```
-```{r}
-#poverty levels with respect to location
-Location = train2%>% 
+#analysis of poverty class based on location of the household(urban/rural) 
+Location = new_train%>% 
   select(area1,area2, Target) %>%
   filter(!is.na(area1),!is.na(area2)) %>%
   group_by(Target) %>%
@@ -141,140 +117,51 @@ ggplot(Location, aes(Target,Percentage)) +
   theme_bw()
 ```
 ```{r}
-#poverty levels based on household size
-Size = train2 %>% 
-  select(tamhog, Target) %>%
-  filter(!is.na(tamhog)) %>%
-  group_by(Target) %>%
-  summarise(meanSize = mean(tamhog))
-
-ggplot(Size, aes(Target,meanSize))+geom_bar(stat = "identity") +
-  coord_flip() +
-  labs(title = "Mean Household Size by Poverty Designation", x = "Poverty Designation", y = "Mean Number of Individuals in a Household") +
-  theme_bw()
-```
-```{r}
-#refrigerator
-train2%>%
-ggplot(aes(as.factor(refrig)))+
-geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
-labs(x = "Owns a refrigerator or not?", y = "Count")+
-guides(fill = guide_legend('Household Type'))+
-theme(axis.text.x = element_text(hjust = 1, size = 9))+
-scale_x_discrete(labels = c("No", "Yes"))
-```
-```{r}
-#concentration of income
-stripchart(train2$v2a1)
-```
-```{r}
-#right skewed monthly rent payment
-hist(train2$v2a1,main="Distribution of w1",xlab="w1")
-
-ggplot(train2, aes(v2a1, fill = train2$Target)) + geom_histogram()
-
-hist(train2$tamviv,main="Distribution of number od people in household",xlab="w1")
-```
-```{r}
-#Analysis of whether telesvion is owned based on poverty level
-Train%>%
-ggplot(aes(as.factor(television)))+
-geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
-labs(x = "Owns a television or not?", y = "Count")+
-guides(fill = guide_legend('Poverty Class'))+
-scale_x_discrete(labels = c("No", "Yes"))
-```
-```{r}
-Train %>%
-ggplot(aes(x = as.factor(r4h1)))+
-geom_bar(colour = "grey19", fill = "blue", alpha = 0.6)+
-facet_wrap(~as.factor(Target), scales = "free", ncol = 3)+ 
-theme(axis.text.x = element_text( hjust = 1, size = 7))+
-theme(strip.text = element_text(size = 7, face = "bold"))+
-labs(title = "Relation between number of males younger than 12 and Household Type", x = "Type of Household", y = "Count")
-```
-
-```{r}
-#number of males per household
-train2 %>%
-ggplot(aes(as.factor(r4h3)))+
-geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.6)+
-labs(x = "Number of males older than 12", y = "Count")+
-guides(fill = guide_legend('Household Type'))
-
-```
-```{r}
-#boxplot for number of males per poverty class
-p<-ggplot(Train, aes(x=r4h3, y=v2a1, color=Target)) +geom_boxplot()
+#analysis of monthly rent payment per target class
+#average monthly rent per target class
+s=aggregate(v2a1~Target, new_train, mean)
+s
+p<-ggplot(data=s, aes(x=Target, y=v2a1)) +
+  geom_bar(stat="identity",fill="orange")+coord_flip()+labs(title = "Relation between average monthly rent for a Poverty Class", y = "Monthly Rent Payment", x = "Target")
 p
 ```
+<h4> Visualizations of distributions of memebers of Household</h4>
+<h4>Poverty Classes</h4>
+<h5>1 - Extreme Poverty</h5>
+<h5>2 - Moderate Poverty</h5>
+<h5>3 - Vulnerable Households</h5>
+<h5>4 - Non-vulnerable Households</h5>
 ```{r}
-#dependency rate per poverty class
-p<-ggplot(data=train2, aes(x=Target, y=dependency)) +geom_histogram(stat="identity")
-p
-```
+#analysis of the age distribution of male and female based on poverty class
+t2=new_train1%>%
+ggplot(aes(as.factor(r4h1)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.7)+
+labs(x = "Males younger than 12 years of age", y = "Count",title="Male Age Distribution")+
+guides(fill = guide_legend('Class'))
 
-```{r}
-#number of adults in a household
-Train %>%
-ggplot(aes(x = as.factor(hogar_adul)))+
-geom_bar(colour = "grey19", fill = "blue", alpha = 0.6)+
-facet_wrap(~as.factor(Target), scales = "free", ncol = 3)+ 
-theme(axis.text.x = element_text( hjust = 1, size = 7))+
-theme(strip.text = element_text(size = 7, face = "bold"))+
-labs(title = "Relation between number of adults and Household Type", x = "Type of Household", y = "Count")
-```
-```{r}
-train2  %>%
-ggplot(aes(as.factor(hogar_adul)))+
-geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.6)+
-labs(x = "Number of adults in a household", y = "Count")+
-guides(fill = guide_legend('Household Type'))
-```
+t3=new_train1%>%
+ggplot(aes(as.factor(r4h2)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.7)+
+labs(x = "Males 12 years of age and older", y = "Count")+
+guides(fill = guide_legend('Class'))
 
-```{r}
-train2 %>%
-  group_by(Target,hogar_adul) %>%
-  summarise(v2a1=n()) %>%
-  plot_ly(x=~hogar_adul, y=~v2a1, group_by=~Target,
-                           type="scatter",color=~Target, mode="lines+markers")
-```
-```{r}
-#number of females
-train2 %>%
-ggplot(aes(as.factor(r4m3)))+
-geom_bar(color = "black", fill = "red", alpha = 0.5)+
-labs(x = "Total Number of Females in the Household", "Frequency")
+t5=new_train1%>%
+ggplot(aes(as.factor(r4m1)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.7)+
+labs(x = "Females younger than 12 years of age", y = "Count",title="Female Age Distribution")+
+guides(fill = guide_legend('Class'))
 
-#number of males
-train2%>%
-ggplot(aes(as.factor(r4h3)))+
-geom_bar(color = "black", fill = "red", alpha = 0.5)+
-labs(x = "Total Number of Males in the Household", "Frequency")
-```
-```{r}
-#poverty levels with respect to location
-education= train2%>% 
-  select(instlevel1,instlevel2,instlevel3,instlevel4,instlevel5,instlevel6, Target) %>%
-  filter(!is.na(instlevel1),!is.na(instlevel2),!is.na(instlevel3),!is.na(instlevel4),!is.na(instlevel5),!is.na(instlevel6)) %>%
-  group_by(Target) %>%
-  summarise(NoEducation= mean(instlevel1)*100,NoEducation= mean(instlevel2)*100,IncompletePrimary= mean(instlevel3)*100,CompletePrimary= mean(instlevel4)*100,IncompleteAcademicSecondaryLevel= mean(instlevel5)*100,CompleteAcademicSecondaryLevel= mean(instlevel6)*100) %>%
-  gather("education", "Percentage", 6:3) 
+t6=new_train1%>%
+ggplot(aes(as.factor(r4m2)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.7)+
+labs(x = "Females 12 years of age and older", y = "Count")+
+guides(fill = guide_legend('Class'))
 
-ggplot(education, aes(Target,Percentage)) +   
-  geom_bar(aes(fill = education), position = "dodge", stat="identity") +
-  coord_flip()+
-  labs(title = "Poverty By Location", subtitle = "Shows the split between levels of education for each poverty designation", x = "Poverty Class", y = "Percentage Of education level") +
-  theme_bw()
+grid.arrange(t2,t3,t5,t6,nrow = 2)
 ```
 ```{r}
-#number of male and female compariosns 
-library(lattice)
-boxplot(train2$r4m3,train2$r4h3 ,data=train2)
-```
-```{r}
-#poverty levels with respect to location
-prop= train2%>% 
+#poverty levels with respect to members of household
+prop= new_train%>% 
   select(hogar_nin,hogar_adul,hogar_mayor, Target) %>%
   filter(!is.na(hogar_nin),!is.na(hogar_adul),!is.na(hogar_mayor)) %>%
   group_by(Target) %>%
@@ -284,46 +171,239 @@ prop= train2%>%
 ggplot(prop, aes(Target,Percentage)) +   
   geom_bar(aes(fill = prop), position = "stack", stat="identity") +
   coord_flip()+
-  labs(title = "Poverty By Propotion", x = "Poverty Class", y = "Propotion Of people") +
+  labs(title = "Poverty By Propotion of people", x = "Poverty Class", y = "Propotion Of people") +
   theme_bw()
 ```
-
 ```{r}
-
-prop1= train2%>% 
-  select(r4h3,r4m3, Target) %>%
-  filter(!is.na(r4h3),!is.na(r4m3)) %>%
+#Status of members in the household
+Status= new_train%>% 
+  select(estadocivil1,estadocivil2,estadocivil3,estadocivil4,estadocivil5,estadocivil6,estadocivil7, Target) %>%
+  filter(!is.na(estadocivil1),!is.na(estadocivil2),!is.na(estadocivil3),!is.na(estadocivil4),!is.na(estadocivil5),!is.na(estadocivil6),!is.na(estadocivil7)) %>%
   group_by(Target) %>%
-  summarise(NoOfMales= mean(r4h3)*100,NoOfFemales= mean(r4m3)*100) %>%
-  gather("prop1", "Percentage", 2:3) 
+  summarise(LessThan10years= mean(estadocivil1)*100,Free= mean(estadocivil2)*100,Married= mean(estadocivil3)*100,Divorced= mean(estadocivil4)*100,Separted= mean(estadocivil5)*100,WidowOrWidower= mean(estadocivil6)*100,Single= mean(estadocivil7)*100) %>%
+  gather("Status", "Percentage", 7:2) 
 
-ggplot(prop1, aes(Target,Percentage)) +   
-  geom_bar(aes(fill = prop1), position = "stack", stat="identity") +
-  coord_flip()+
-  labs(title = "Poverty By Propotion", x = "Poverty Class", y = "Propotion Of Male and Female per household") +
-  theme_bw()
+ggplot(Status, aes(Target,Percentage)) +   
+  geom_bar(aes(fill = Status), position = "dodge", stat="identity",color="black") +
+  labs(title = "Status of members of household and poverty class", x = "Poverty Class", y = "Status of household members") +theme(axis.text.x=element_text(angle=45, hjust=1))
 ```
 ```{r}
-#comparison of average years of education 
-p<-ggplot(Train, aes(x=meaneduc, y=v2a1, color=Target)) +geom_boxplot()
+#average years of education for adults (18+) per target class
+#meaneduc denotes average years of education for adults (18+)
+s1=aggregate(meaneduc~Target, new_train, mean)
+s1
+p1<-ggplot(data=s1, aes(x=Target, y=meaneduc)) +
+  geom_bar(stat="identity",fill="red")+coord_flip()
+p1
+```
+
+<h4>Visualizations of the Household</h4>
+<h4>Poverty Classes</h4>
+<h5>1 - Extreme Poverty</h5>
+<h5>2 - Moderate Poverty</h5>
+<h5>3 - Vulnerable Households</h5>
+<h5>4 - Non-vulnerable Households</h5>
+```{r}
+#What do households own
+
+#check whether they own a television
+p1=new_train1%>%
+ggplot(aes(as.factor(television)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Owns a television?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("No", "Yes"))
+
+#check whether they own a computer or notebook
+p2=new_train1%>%
+ggplot(aes(as.factor(computer)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Owns a Computer?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("No", "Yes"))
+
+#check whether they own a mobile phone
+p3=new_train1%>%
+ggplot(aes(as.factor(mobilephone)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Owns a mobile phone?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("No", "Yes"))
+
+#check whether they own a refridgerator
+p4=new_train1%>%
+ggplot(aes(as.factor(refrig)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Owns a Refrigerator?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("No", "Yes"))
+
+#check whether they own a tablet
+p5=new_train1%>%
+ggplot(aes(as.factor(v18q)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Owns a Tablet?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("No", "Yes"))
+
+grid.arrange(p1,p2,p3,p4,p5,nrow = 3)
+```
+
+```{r}
+#analysis of household size per poverty class
+new_train%>%
+ggplot(aes(as.factor(tamhog)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.6)+
+labs(x = "Household size", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))
+```
+```{r}
+#analysis of basic household amenities  per poverty level
+a1=new_train1%>%
+ggplot(aes(as.factor(v14a)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Bathroom in the HouseHold?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("No", "Yes"))
+
+a2=new_train1%>%
+ggplot(aes(as.factor(abastaguano)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Water provision in the HouseHold?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("Yes", "No"))
+
+a3=new_train1%>%
+ggplot(aes(as.factor(noelec)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Electricity in the HouseHold?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("Yes", "No"))
+
+
+a4=new_train1%>%
+ggplot(aes(as.factor(sanitario1)))+
+geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black")+
+labs(x = "Toilet in the HouseHold?", y = "Count")+
+guides(fill = guide_legend('Poverty Class'))+
+scale_x_discrete(labels = c("Yes", "No"))
+
+grid.arrange(a1,a2,a3,a4,nrow = 2)
+```
+
+```{r}
+#analysis of wall, roof and floor quality for each Poverty Class
+#creating three columns
+new_train2$roof<-NA
+new_train2$wall<-NA
+new_train2$floor<-NA
+new_train2$wall[new_train2$epared1 == 1] = 'Bad'
+new_train2$wall[new_train2$epared2 == 1] = 'Regular'
+new_train2$wall[new_train2$epared3 == 1] = 'Good'
+
+new_train2$roof[new_train2$etecho1 == 1] = 'Bad'
+new_train2$roof[new_train2$etecho2== 1] = 'Regular'
+new_train2$roof[new_train2$etecho3== 1] = 'Good'
+
+new_train2$floor[new_train2$eviv1 == 1] = 'Bad'
+new_train2$floor[new_train2$eviv2 == 1] = 'Regular'
+new_train2$floor[new_train2$eviv3 == 1] = 'Good'
+
+
+l1=new_train2%>%
+ggplot(aes(x = as.factor(wall)))+
+geom_bar(colour = "black", fill = "pink", alpha = 0.6)+
+facet_wrap(~as.factor(Target), scales = "free", ncol = 4)+ 
+theme(axis.text.x = element_text( hjust = 1, size = 7))+
+theme(strip.text = element_text(size = 7, face = "bold"))+
+labs(title = "Relation between wall quality and Poverty Class", x = "Type of Household", y = "Count")
+
+
+l2=new_train2%>%
+ggplot(aes(x = as.factor(floor)))+
+geom_bar(colour = "black", fill = "red", alpha = 0.6)+
+facet_wrap(~as.factor(Target), scales = "free", ncol = 4)+ 
+theme(axis.text.x = element_text( hjust = 1, size = 7))+
+theme(strip.text = element_text(size = 7, face = "bold"))+
+labs(title = "Relation between floor quality and Poverty Class", x = "Type of Household", y = "Count")
+
+
+l3=new_train2%>%
+ggplot(aes(x = as.factor(roof)))+
+geom_bar(colour = "black", fill = "purple", alpha = 0.6)+
+facet_wrap(~as.factor(Target), scales = "free", ncol = 4)+ 
+theme(axis.text.x = element_text( hjust = 1, size = 7))+
+theme(strip.text = element_text(size = 7, face = "bold"))+
+labs(title = "Relation between roof quality and Poverty Class", x = "Type of Household", y = "Count")
+
+grid.arrange(l1,l2,l3,nrow = 3)
+```
+```{r}
+#analysis poverty Levels with respect to Number of Rooms and People Living
+p<-ggplot(data=new_train,aes(x = tamviv,y=rooms)) +
+  geom_point(color="red")+
+  facet_wrap(~as.factor(Target), scales = "free", ncol = 3)+ 
+labs(title = "Poverty Levels with respect to Number of Rooms and People Living", y = "Rooms",x="Number of People living in the household")
 p
 ```
+```{r}
+#scatterplot between age of the house and monthly rent
+target<-subset(new_train, new_train$parentesco1==1)
+ggplot(target, aes(x = v2a1, y = age)) +
+    geom_point((aes(color = factor(Target))))+labs(title = "Plot between age of the house and monthly rent", x = "Monthly Rent", y = "Age of Household")
+```
+<h4>Visualizations on Education levels of members of Household</h4>
+```{r}
+target$gen<-NA
+target$gen[target$male == 1] = 'Male'
+target$gen[target$female == 1] = 'Female'
+
+#comparison of years of education of male and female heads of households 
+boxplot(target$escolari[target$male==1],target$escolari[target$female==1] ,data=target,xlab = "Gender of household head",
+   ylab = "Years of education", 
+   main = "Comparison of years of education of male and female heads of households ",
+   col = c("steelblue","pink"),
+   names = c("Male","Female"))
+
+cat("It can be clearly inferred that the average years of education for female household head is significantly lesser than male household head.")
+
+```
+
 
 ```{r}
-#is.na(train2$v2a1)
-is.na(train2$meaneduc)
+new_train$education<-NA
+new_train$education[new_train$instlevel1 == 1] = 'NoEducation'
+new_train$education[new_train$instlevel2 == 1] = 'IncompletePrimary'
+new_train$education[new_train$instlevel3 == 1] = 'CompletePrimary'
+new_train$education[new_train$instlevel4 == 1] = 'IncompleteAcademicSecondaryLevel'
+new_train$education[new_train$instlevel5 == 1] = 'CompleteAcademicSecondaryLevel'
+new_train$education[new_train$instlevel6 == 1] = 'IncompleteTechnicalSecondaryLevel'
+new_train$education[new_train$instlevel7 == 1] = 'CompleteTechnicalSecondaryLevel'
+new_train$education[new_train$instlevel8 == 1] = 'UndergraduateAndHigherEducation'
+new_train$education[new_train$instlevel9 == 1] = 'PostgraduateHigherEducation'
+
+ggplot(data = new_train, aes(x=education, y=tamviv)) + geom_boxplot(aes(fill=Target))+theme(axis.text.x=element_text(angle=90, hjust=1))+labs(title = "Effect of Education Details and Household Size on Poverty Levels", x = "Education Level", y = "Household size")
+```
+
+```{r}
+new_train$gen<-NA
+new_train$gen[new_train$male == 1] = 'Male'
+new_train$gen[new_train$female == 1] = 'Female'
+
+ggplot(new_train, aes(x = gen, y = v2a1, fill = education)) + 
+  geom_bar(stat = 'identity',position = 'stack') + facet_grid(~Target)+labs(title = "Poverty By education level", subtitle = "Shows the split between levels of education for each poverty designation for each gender", x = "Poverty Class", y = "Monthly income") 
 ```
 ```{r}
-#avg monthly rent per target class
-s=aggregate(v2a1~Target, train2, mean)
-s
-p<-ggplot(data=s, aes(x=Target, y=v2a1)) +
-  geom_bar(stat="identity",fill="orange")
-p
-```
+education= new_train1%>% 
+  select(instlevel1,instlevel2,instlevel3,instlevel4,instlevel5,instlevel6, Target) %>%
+  filter(!is.na(instlevel1),!is.na(instlevel2),!is.na(instlevel3),!is.na(instlevel4),!is.na(instlevel5),!is.na(instlevel6)) %>%
+  group_by(Target)%>%
+  summarise(NoEducation= mean(instlevel1)*100,IncompletePrimary= mean(instlevel2)*100,CompletePrimary= mean(instlevel3)*100,IncompleteAcademicSecondaryLevel= mean(instlevel4)*100,CompleteAcademicSecondaryLevel= mean(instlevel5)*100,IncompleteTechnicalSecondaryLevel= mean(instlevel6)*100) %>%
+  gather("education", "Percentage",6:2) 
 
-```{r}
-#piechart
-
+ggplot(education, aes(Target,Percentage)) +   
+  geom_bar(aes(fill = education), position = "stack", stat="identity",color="black") +
+  labs(title = "Poverty By education level", subtitle = "Shows the split between levels of education for each poverty designation", x = "Poverty Class", y = "Percentage Of education level") 
+  
 ```
 
