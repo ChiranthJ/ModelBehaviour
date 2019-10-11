@@ -1,5 +1,5 @@
 ---
-title: "EDA_FINAL"
+title: "ModelBehaviour\EDA"
 author: "Diya Chandra"
 date: "11/10/2019"
 output: html_document
@@ -7,36 +7,22 @@ output: html_document
 
 ```{r}
 #libraries and packages used 
-#install.packages("ggthemes")
-#install.packages("factoextra")
-#install.packages("Rtsne")
-#install.packages("largeVis")
-#install.packages("breakDown")
 #install.packages("gridExtra")
-#install.packages("glmnet")
-#install.packages("hrbrthemes")
 #install.packages("tidyverse")
 #install.packages("corrplot")
 #install.packages("plotly")
+#install.packages("corrgram")
 #install.packages("dplyr")
-library(tidyverse) # importing, cleaning, visualising
+#install.packages("grid")
+#library(tidyverse) 
 library(corrplot) # correlation visualisation
-#library(ggthemes) # extra plotting themes
 library(plotly) # interactive plots
-#library(factoextra) # pca visualisation
-#library(Rtsne) # visualisation of high dimensional datsets
-#library(breakDown) # visualising model results
 library(gridExtra) # arranging plots
-library(tidyr)
-#library(glmnet) # regularised regression
 library(corrgram)
 library(tidyr)
 library(dplyr)
 library(grid)
-#library(viridis)
-#library(hrbrthemes)
-#library(gridExtra)
-#library(lattice)
+
 ```
 ```{r}
 #path of uncleaned dataset
@@ -120,7 +106,7 @@ zdf$Feature = c("Poverty Class",
 #bar plot of top twenty correlated features
 ggplot(zdf, aes(reorder(Feature, abs_cor),abs_cor))+geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Features with Highest Correlation to Poverty Class", subtitle = 'Absolute value of correlation',y = "Poverty Class", x = "Attribute") +
+  labs(title = "Features with Highest Correlation to Poverty Class before cleaning", subtitle = 'Absolute value of correlation',y = "Poverty Class", x = "Attribute") +
   theme_bw()
 
 #creating a dataframe with only important features
@@ -129,7 +115,7 @@ train_n <- sapply(train7 , as.numeric )
 res <- as.matrix(cor(train_n))
 options(repr.plot.width=10,repr.plot.height=10)
 
-#plotting a correlation matrix to show
+#plotting a correlation matrix to show top twenty correlated features before cleaning
 corrplot(res,order = "hclust", tl.cex = 0.5)
 rm(train_n,res)
 ```
@@ -186,7 +172,7 @@ train_n <- sapply(train7 , as.numeric )
 res <- as.matrix(cor(train_n))
 options(repr.plot.width=10,repr.plot.height=10)
 
-#plotting a correlation matrix to show
+#plotting a correlation matrix to show top twenty correlated features after cleaning
 corrplot(res,order = "hclust", tl.cex = 0.5)
 rm(train_n,res)
 ```
@@ -234,7 +220,7 @@ zdf$Feature = c("Poverty Class",
 #bar plot of top twenty correlated features
 ggplot(zdf, aes(reorder(Feature, abs_cor),abs_cor))+geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Features with Highest Correlation to Poverty Class", subtitle = 'Absolute value of correlation',y = "Poverty Class", x = "Attribute") +
+  labs(title = "Features with Highest Correlation to Poverty Class after cleaning and remoivng sqaure values", subtitle = 'Absolute value of correlation',y = "Poverty Class", x = "Attribute") +
   theme_bw()
 
 #creating a dataframe with only important features
@@ -243,7 +229,7 @@ train_n <- sapply(train7 , as.numeric )
 res <- as.matrix(cor(train_n))
 options(repr.plot.width=10,repr.plot.height=10)
 
-#plotting a correlation matrix to show
+#plotting a correlation matrix to show top twenty correlated features after cleaning and removinf square values 
 corrplot(res,order = "hclust", tl.cex = 0.5)
 rm(train_n,res)
 
@@ -261,8 +247,10 @@ Location = new_train%>%
 ggplot(Location, aes(Target,Percentage)) +   
   geom_bar(aes(fill = Location), position = "dodge", stat="identity") +
   coord_flip()+
-  labs(title = "Poverty By Location", subtitle = "Shows the split between urban and rural for each poverty designation", x = "Poverty Designation", y = "Percentage Of Households") +
+  labs(title = "Poverty By Location", subtitle = "Shows the split between urban and rural for each poverty Class", x = "Poverty Class", y = "Percentage Of Households") +
   theme_bw()
+
+cat("It can be inferred from this graph that households in the urban region for every poverty class are more affected than the rural household.")
 ```
 ```{r}
 #analysis of monthly rent payment per target class
@@ -270,8 +258,9 @@ ggplot(Location, aes(Target,Percentage)) +
 s=aggregate(v2a1~Target, new_train, mean)
 s
 p<-ggplot(data=s, aes(x=Target, y=v2a1)) +
-  geom_bar(stat="identity",fill="orange")+coord_flip()+labs(title = "Relation between average monthly rent for a Poverty Class", y = "Monthly Rent Payment", x = "Target")
+  geom_bar(stat="identity",fill="orange")+coord_flip()+labs(title = "Relation between average monthly rent for a Poverty Class", y = "Monthly Rent Payment", x = "Poverty Class")
 p
+cat("Average Rent payment per poverty class can be inferred and it is observed that the average rent for non-vulnerable household is the highest which suggests a steady financial status for these households.")
 ```
 <h4> Visualizations of distributions of memebers of Household</h4>
 <h4>Poverty Classes</h4>
@@ -321,6 +310,8 @@ ggplot(prop, aes(Target,Percentage)) +
   coord_flip()+
   labs(title = "Poverty By Propotion of people", x = "Poverty Class", y = "Propotion Of people") +
   theme_bw()
+
+cat("It can be observed that there is a lesser propotion of seniors in every household. The extreme poverty class seems to have the greatest number of children compared to the other poverty classes. Thus, the number of children in a household seems have a significant impact on the poverty level of a household")
 ```
 ```{r,fig.height = 8, fig.width = 10}
 #Status of members in the household
@@ -334,6 +325,7 @@ Status= new_train%>%
 ggplot(Status, aes(Target,Percentage)) +   
   geom_bar(aes(fill = Status), position = "dodge", stat="identity",color="black") +
   labs(title = "Status of members of household and poverty class", x = "Poverty Class", y = "Status of household members") +theme(axis.text.x=element_text(angle=45, hjust=1))
+cat("This graph further confirms that the number of children(less than 19) do have a significant impact on the poverty level of each household. The extreme poverty class has the highest number of children as compared to the other others.")
 ```
 ```{r}
 #average years of education for adults (18+) per target class
@@ -343,6 +335,8 @@ s1
 p1<-ggplot(data=s1, aes(x=Target, y=meaneduc)) +
   geom_bar(stat="identity",fill="red")+coord_flip()
 p1
+
+cat("This graph shows that the non-vulnerable households have the highest average years of education while the class of extreme poverty seems to have the least average years of education which suggests that importance of overall education years of the members of the household.")
 ```
 
 <h4>Visualizations of the Household</h4>
@@ -351,7 +345,7 @@ p1
 <h5>2 - Moderate Poverty</h5>
 <h5>3 - Vulnerable Households</h5>
 <h5>4 - Non-vulnerable Households</h5>
-```{r,fig.height = 8, fig.width = 10}
+```{r}
 #What do households own
 
 #check whether they own a television
@@ -400,6 +394,8 @@ scale_x_discrete(labels = c("No", "Yes"))+theme(legend.title = element_text(size
                legend.text = element_text(size = 8))
 
 grid.arrange(p1,p2,p3,p4,p5,nrow = 3)
+
+cat("It can be inferred that a mobile phone, refrigerator and televison may be owned by households of all poverty classes. However, owing a tablet or a computer in households other than Class 4(non-vulnerable) is not common.")
 ```
 
 ```{r,fig.height = 6, fig.width = 10}
@@ -409,8 +405,10 @@ ggplot(aes(as.factor(tamhog)))+
 geom_bar(aes(fill = as.factor(Target)), position = "dodge", color = "black", alpha = 0.6)+
 labs(x = "Household size", y = "Count")+
 guides(fill = guide_legend('Poverty Class'))
+
+cat("This graph shows that a household size of 3-4 is the most common due to the peak of the graph.There is evidence that Class 4(non -vulnerable) data as the count is significantly higher than others.Thus, data balancing methods would be required.")
 ```
-```{r,fig.height = 8, fig.width = 10}
+```{r}
 #analysis of basic household amenities  per poverty level
 
 #analysis of whether a Bathroom is present in a household  per poverty level
@@ -446,9 +444,11 @@ guides(fill = guide_legend('Poverty Class'))+
 scale_x_discrete(labels = c("Yes", "No"))
 
 grid.arrange(a1,a2,a3,a4,nrow = 2)
+
+cat("This graph is evidence to the fact that basic amenities such as water,a toilet, a bathroom and electricty is avaiable to people of all poverty classes.")
 ```
 
-```{r}
+```{r,fig.height = 8, fig.width = 8}
 #analysis of wall, roof and floor quality for each Poverty Class
 #creating three columns
 new_train2$roof<-NA
@@ -466,7 +466,7 @@ new_train2$floor[new_train2$eviv1 == 1] = 'Bad'
 new_train2$floor[new_train2$eviv2 == 1] = 'Regular'
 new_train2$floor[new_train2$eviv3 == 1] = 'Good'
 
-
+#Relation between wall quality and Poverty Class
 l1=new_train2%>%
 ggplot(aes(x = as.factor(wall)))+
 geom_bar(colour = "black", fill = "pink", alpha = 0.6)+
@@ -475,7 +475,7 @@ theme(axis.text.x = element_text( hjust = 1, size = 7))+
 theme(strip.text = element_text(size = 7, face = "bold"))+
 labs(title = "Relation between wall quality and Poverty Class", x = "Type of Household", y = "Count")
 
-
+#Relation between floor quality and Poverty Class
 l2=new_train2%>%
 ggplot(aes(x = as.factor(floor)))+
 geom_bar(colour = "black", fill = "red", alpha = 0.6)+
@@ -484,7 +484,7 @@ theme(axis.text.x = element_text( hjust = 1, size = 7))+
 theme(strip.text = element_text(size = 7, face = "bold"))+
 labs(title = "Relation between floor quality and Poverty Class", x = "Type of Household", y = "Count")
 
-
+#Relation between roof quality and Poverty Class
 l3=new_train2%>%
 ggplot(aes(x = as.factor(roof)))+
 geom_bar(colour = "black", fill = "purple", alpha = 0.6)+
@@ -494,6 +494,8 @@ theme(strip.text = element_text(size = 7, face = "bold"))+
 labs(title = "Relation between roof quality and Poverty Class", x = "Type of Household", y = "Count")
 
 grid.arrange(l1,l2,l3,nrow = 3)
+
+cat("It can be observed that the roof, wall and floor quailty for households of all poverty levels are regular or good by majority.But class 4(non-vulnerable), has the least number of BADs while number of BADs are more for extreme and moderate poverty state. ")
 ```
 ```{r}
 #analysis poverty Levels with respect to Number of Rooms and People Living
@@ -503,11 +505,13 @@ p<-ggplot(data=new_train,aes(x = tamviv,y=rooms)) +
 labs(title = "Poverty Levels with respect to Number of Rooms and People Living", y = "Rooms",x="Number of People living in the household")
 p
 ```
-```{r,fig.height = 8, fig.width = 10}
+```{r}
 #scatterplot between age of the house and monthly rent
 target<-subset(new_train, new_train$parentesco1==1)
 ggplot(target, aes(x = v2a1, y = age)) +
-    geom_point((aes(color = factor(Target))))+labs(title = "Plot between age of the house and monthly rent", x = "Monthly Rent", y = "Age of Household")
+    geom_point((aes(color = factor(Target))))+labs(title = "Plot between age of the house and monthly rent based on poverty class", x = "Monthly Rent", y = "Age of Household")
+
+cat("Helps understand the distribution of the rent paid depending on the age per poverty class.Outliers can also be seen for the monthly rent")
 ```
 <h4>Visualizations on Education levels of members of Household</h4>
 ```{r}
@@ -542,6 +546,8 @@ new_train$education[new_train$instlevel8 == 1] = 'UndergraduateAndHigherEducatio
 new_train$education[new_train$instlevel9 == 1] = 'PostgraduateHigherEducation'
 
 ggplot(data = new_train, aes(x=education, y=tamviv)) + geom_boxplot(aes(fill=Target))+theme(axis.text.x=element_text(angle=90, hjust=1))+labs(title = "Effect of Education Details and Household Size on Poverty Levels", x = "Education Level", y = "Household size")
+
+cat("The classes of extreme, moderate and vulnerable households are not present in the Postgradute level. It can also be observed that extreme values of household size for IncompleteAcademicSecondary level and No education is  higher than completeAcademicSecondary level")
 ```
 
 ```{r,fig.height = 8, fig.width = 10}
@@ -552,6 +558,8 @@ new_train$gen[new_train$female == 1] = 'Female'
 
 ggplot(new_train, aes(x = gen, y = v2a1, fill = education)) + 
   geom_bar(stat = 'identity',position = 'stack') + facet_grid(~Target)+labs(title = "Poverty By education level", subtitle = "Shows the split between levels of education for each poverty designation for each gender", x = "Poverty Class", y = "Monthly income") 
+
+cat("It can be inferred that extreme poverty class pays the least rent. The distribution of male and female education level for each class is depicted.")
 ```
 ```{r,fig.height = 7, fig.width = 10}
 #Analysis of education level per poverty class
