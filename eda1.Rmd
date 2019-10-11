@@ -468,11 +468,57 @@ scale_x_discrete(labels = c("No", "Yes"))
 ```
 ```{r}
 #average years of education for adults (18+) per target class
-s1=aggregate(meaneduc~Target, new_train, mean)
+s1=aggregate(meaneduc~Target, new_train1, mean)
 s1
 p1<-ggplot(data=s1, aes(x=Target, y=meaneduc)) +
-  geom_bar(stat="identity",fill="orange")
+  geom_bar(stat="identity",fill="orange")+coord_flip()
 p1
+
+#creating three columns
+new_train1$roof<-NA
+new_train1$wall<-NA
+new_train1$floor<-NA
+new_train1$wall[new_train1$epared1 == 1] = 'Bad'
+new_train1$wall[new_train1$epared2 == 1] = 'Regular'
+new_train1$wall[new_train1$epared3 == 1] = 'Good'
+
+new_train1$roof[new_train1$etecho1 == 1] = 'Bad'
+new_train1$roof[new_train1$etecho2== 1] = 'Regular'
+new_train1$roof[new_train1$etecho3== 1] = 'Good'
+
+new_train1$floor[new_train1$eviv1 == 1] = 'Bad'
+new_train1$floor[new_train1$eviv2 == 1] = 'Regular'
+new_train1$floor[new_train1$eviv3 == 1] = 'Good'
+
+
+l1=new_train1%>%
+ggplot(aes(x = as.factor(wall)))+
+geom_bar(colour = "black", fill = "pink", alpha = 0.6)+
+facet_wrap(~as.factor(Target), scales = "free", ncol = 4)+
+theme(axis.text.x = element_text( hjust = 1, size = 7))+
+theme(strip.text = element_text(size = 7, face = "bold"))+
+labs(title = "Relation between wall quality and Poverty Class", x = "Type of Household", y = "Count")
+
+
+l2=new_train1%>%
+ggplot(aes(x = as.factor(floor)))+
+geom_bar(colour = "black", fill = "red", alpha = 0.6)+
+facet_wrap(~as.factor(Target), scales = "free", ncol = 4)+
+theme(axis.text.x = element_text( hjust = 1, size = 7))+
+theme(strip.text = element_text(size = 7, face = "bold"))+
+labs(title = "Relation between floor quality and Poverty Class", x = "Type of Household", y = "Count")
+
+
+l3=new_train1%>%
+ggplot(aes(x = as.factor(roof)))+
+geom_bar(colour = "black", fill = "purple", alpha = 0.6)+
+facet_wrap(~as.factor(Target), scales = "free", ncol = 4)+
+theme(axis.text.x = element_text( hjust = 1, size = 7))+
+theme(strip.text = element_text(size = 7, face = "bold"))+
+labs(title = "Relation between roof quality and Poverty Class", x = "Type of Household", y = "Count")
+
+grid.arrange(l1,l2,l3,nrow = 3)
+
 ```
 
 
