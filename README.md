@@ -3,10 +3,10 @@
 # Costa Rican Household Poverty Level Prediction
 
 ## Problem Statement
-Social welfare benefits entitlement prediction based on poverty level.
+Classficiation of households based on poverty level for allocation of welfare benifits and reporting information regarding proimenent features that cause households to fall in these categories to enable upliftment.
 
 ## Short description of the project
-This project helps us identify which households have the highest need for social welfare assistance. Analyzing different parameters from the data set we aim to create a model that can help improve the quality of life for people.
+This project focuses on prediction of poverty levels of households based on socio-economic factors and classifies them into 4 distinct categories. Features selection and level classification on a data set containing household characteristics of a representative sample of Costa Rican households allows accurate insights into features to enable local development in the required areas and appropriate allotment of funds for social welfare benefits.
 
 
 
