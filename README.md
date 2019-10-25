@@ -19,6 +19,8 @@ Sample_testing_model_phase1.ipynb : python notebook consisting of basic statisti
 ModelBehaviour_LiteratureSurveyReport.pdf: Literature survey report of the project (Phase 1)
 ColumnMappings.txt: Detailed description of attributes of original train dataset along with the values it can take
 
+Link to our blog for updates:  https://modelbehaviour2019.blogspot.com/
+
 ### Reference
 https://www.kaggle.com/c/costa-rican-household-poverty-prediction/overview
 
