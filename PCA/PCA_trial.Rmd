@@ -1,0 +1,72 @@
+---
+title: "PCA_DA_Proj"
+author: "Namrata R"
+date: "22/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+```
+
+
+```{r}
+#install.packages("ggbiplot")
+#library(devtools)
+library(dplyr)
+```
+
+
+
+```{r}
+preprocessed = read.csv('C:\\Users\\rames\\OneDrive\\Desktop\\namma\\DA_proj\\preprocessed.csv')
+#mtcars.pca <- prcomp(preproces[,c(1:7,10,11)], center = TRUE,scale. = TRUE)
+```
+```{r}
+colnames(preprocessed)
+df <- subset(preprocessed, select = -c(Id,Target,idhogar))
+```
+```{r}
+ncol(preprocessed)
+ncol(df)
+
+df_new<-data.frame(sapply(df,as.numeric))
+df_new
+#sapply(df_new, class)
+names(df_new[, sapply(df_new, function(v) var(v, na.rm=TRUE)==0)])
+
+#removing columns with only zero entries
+df_new=df_new[, colSums(df_new !=0) >0]
+print("column with only 0 as entries") 
+setdiff(colnames(df),colnames(df_new))
+df_new
+
+```
+```{r}
+prin_comp <- prcomp(df_new, center = TRUE,scale. = TRUE)
+#summary(df_new.pca)
+names(prin_comp)
+dim(prin_comp$x)
+prin_comp$rotation[1:5,1:4]
+biplot(prin_comp, scale = 0)
+```
+```{r}
+std_dev <- prin_comp$sdev
+pr_var <- std_dev^2
+pr_var[1:10]
+prop_varex <- pr_var/sum(pr_var)
+prop_varex[1:20]
+plot(prop_varex, xlab = "Principal Component",
+             ylab = "Proportion of Variance Explained",
+             type = "b")
+#cumulative scree plot
+plot(cumsum(prop_varex), xlab = "Principal Component",
+              ylab = "Cumulative Proportion of Variance Explained",
+              type = "b")
+```
+```{r}
+cat("As we can see, on implementing dimensionality reduction using PCA for the entire training dataset, from the cumulative proportion of variance, we see that about 40 of the dimensions hardly contribute and hence can be beglected hile training our models. ")
+```
+
