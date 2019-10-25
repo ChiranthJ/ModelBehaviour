@@ -96,7 +96,7 @@ check_train<-train %>%
    filter(length(unique(Target))>1)%>%
   select(parentesco1,idhogar,Target)
 
-cat("no of rows in the subset that shows Households with no heads, having different labels.\n")
+cat("number of rows in the subset that shows Households with no heads, having different labels.\n")
 nrow(check_train)
   
 cat("observation: since nrow of this data subset is 0(no data): the target variables are all identical for members without head of the family, hence no additional change needs to be made \n")
@@ -116,7 +116,7 @@ cat("Handling categorical and non numeric data values \n")
 #new_train %>% select_if(funs(!is.numeric(.))) %>% head()
 colnames(new_train %>%  select_if(is.factor))
 
-cat("\nit can be seen 5 columns have type factor: out of which idhogar and Id can be ignored as they are unique values to distinguish between rows")
+cat("\nit can be seen that 5 columns have type factor: out of which idhogar and Id can be ignored as they are unique values to distinguish between rows")
 ```
 ```{r}
 newdata <- subset(new_train,select=c(dependency, edjefe,edjefa))
@@ -196,7 +196,7 @@ new_train$rez_esc[is.na(new_train$rez_esc)]<-mean(new_train$rez_esc, na.rm=TRUE)
 
 ```
 ```{r}
-nrow(subset(new_train, is.na(new_train$rez_esc)))
+#nrow(subset(new_train, is.na(new_train$rez_esc)))
 cat("since nrow value is 0 all missing values have been taken care of in this column")
 na_count <- sort(colSums(is.na(new_train)),decreasing = TRUE)
 na_count <- data.frame(names=names(na_count), count=na_count)
@@ -210,7 +210,7 @@ print(na_count[na_count$count>0, ])
 new_train %>%
     group_by(v18q1) %>%
     summarise(count=n())
-cat("there are 2 possibilities as to why the value is NA 1) The data hasnt been filled 2) The no of tablets owned is 0\n since v18q column tells whether or not the household owns a laptop,we will compare to see if NA values in v18q1 correspons to 0 in v18q")
+cat("there are 2 possibilities as to why the value is NA 1) The data hasnt been filled 2) The no of tablets owned is 0\n since v18q column tells whether or not the household owns a tablet,we will compare to see if NA values in v18q1 correspons to 0 in v18q")
 
 subset(new_train,select=c(v18q,v18q1))[new_train$v18q==0,] %>%
     distinct(v18q, v18q1, .keep_all = TRUE)
@@ -221,8 +221,8 @@ new_train$v18q1[is.na(new_train$v18q1)]<-0
 ```
 
 ```{r}
-temp <- subset(new_train, is.na(new_train$v18q1))
-nrow(temp)
+#temp <- subset(new_train, is.na(new_train$v18q1))
+#nrow(temp)
 cat("missing values for this column have been taken care of")
 na_count <- sort(colSums(is.na(new_train)),decreasing = TRUE)
 na_count <- data.frame(names=names(na_count), count=na_count)
