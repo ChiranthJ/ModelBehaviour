@@ -18,6 +18,7 @@ preprocessed_wosq.csv: preprocessed and cleaned dataset exclusing the columns wi
 Sample_testing_model_phase1.ipynb : python notebook consisting of basic statistical models for prediction and classification of Target variables along with analysis of scores and results of model
 ModelBehaviour_LiteratureSurveyReport.pdf: Literature survey report of the project (Phase 1)
 ColumnMappings.txt: Detailed description of attributes of original train dataset along with the values it can take
+Sample_testing_model_phase2.ipynb : python notebook consisting of Random Forest Classification Model, Upsampling(data balancing) and PCA(Principle Component Analysis)
 
 Link to our blog for updates:  https://modelbehaviour2019.blogspot.com/
 
