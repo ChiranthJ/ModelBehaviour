@@ -10,6 +10,7 @@ This project focuses on prediction of poverty levels of households based on soci
 
 ## Description of files
 RawData: contains test.csv and train.csv
+##
 version_1_preprocess.Rmd: R markdown file used for data cleaning and preprocessing. It contains 2 output csv files.
 eda1.Rmd: R Markdown file that contains preliminary EDA on the preprocessed data and exploratory analysis using visualization.
 EDA_FINAL1.html: knit file showing EDA, data visualization and analysis
