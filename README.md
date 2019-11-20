@@ -19,6 +19,7 @@ preprocessed_wosq.csv: preprocessed and cleaned dataset exclusing the columns wi
 Upsampling Minority Classes.ipynb: Script to implemenet upsampling and testing on a sample model for training(DT).<br /> 
 Sample_testing_model_phase1.ipynb : python notebook consisting of basic statistical models for prediction and classification of Target variables along with analysis of scores and results of model.<br /> 
 Sample_testing_model_phase2.ipynb : an addition to the previous version by implemeneting Random Forest Classifier, handling imbalance in the dataset(upsampling), implementing PCA( using function created in PCA/PCA_analysis ).Comparing the results.<br /> 
+Sample_testing_model_phase3.ipynb : Contains the XGBoost classifier. However, since the accuracy seems to be less, we can conclude that the random forest classifier was the most suitable model. 
 ModelBehaviour_LiteratureSurveyReport.pdf: Literature survey report of the project (Phase 1)<br /> 
 ColumnMappings.txt: Detailed description of attributes of original train dataset along with the values it can take<br /> <br /> 
 
