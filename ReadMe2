@@ -1,1 +1,25 @@
+Preprocessing:
+(Done in Python)
+version_1_preprocess.Rmd: R markdown file used for data cleaning and preprocessing. It contains 2 output csv files.
+  1)preprocessed.csv: preprocessed and cleaned dataset used for EDA and statistical model.
+  2)preprocessed_wosq.csv: preprocessed and cleaned dataset excluding the columns with squared value attributes used for EDA and statistical model.
+
+Note: We have used the preprocessed.csv for further analysis as the removing the squared value features reduced correlation between attributes.
+
+Exploratory Data Analysis:
+(Done in R)
+EDA.Rmd: R Markdown file that contains preliminary EDA on the preprocessed data and exploratory analysis using visualization.
+EDA_FINAL1.html: knit file showing EDA, data visualization and analysis.
+
+Modelling:
+(Done in Python)
+Models.ipynb : consists of the four models we have used ,i.e, Ridge, XGBoost, Decision Trees and RandomForest Classifiers
+From this, the model that was the most well suited was Random Forest.
+The models are stored in the folder SavedModels
+SavedModels: contains the .sav of all models so that these files can be loaded and tested without fitting the model.
+(we have used the module pickle to do so)
+eg loaded_model = pickle.load(open(filename, 'rb'))
+result = loaded_model.score(X_test, Y_test)
+print(result)
+filename must be specified 
 
